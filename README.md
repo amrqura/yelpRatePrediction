@@ -1,10 +1,10 @@
 # yelpRatePrediction
 This is a machine learning project using sklearn,scikit learn and nltk to predict user rating based on user review.
 
-Yelp dataset is an academic dataset provided that contains information about local business. the dataset 5 json files
+Yelp dataset is an academic dataset that contains information about local business. the dataset contains 5 json files
 including business,checkin,reviews,tip and user.
 
-this project focus in studying review file. the file contains suer reviews about several businesses.
+this project focus in studying review file. the file contains user reviews about several businesses.
 
 the yelp_academic_dataset_review.json contains several records , where each record contains encrypted user_id , encrypted 
 business_id , user review as text and user rating (from 1 to 5).
@@ -13,7 +13,7 @@ we want to predict the user rating about specific business based on user review.
 
     Given a user review , predict the user ratings.
 
-this is machine learning classification algorithm where the input is text file and the output is number.
+this is machine learning classification algorithm where the input is text string and the output is number.
 
 we should predict the output as a number from 1-5. to make it simple , I decide to make the problem as binary 
 classification, trying to predict if the user likes this service or not. simply if the user select rate
