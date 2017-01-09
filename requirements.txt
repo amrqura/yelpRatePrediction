@@ -1,3 +1,3 @@
-nltk==3.2.1
+nltk
 sklearn
-numpy==1.11.0
+numpy
