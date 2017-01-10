@@ -4,7 +4,6 @@ In this script, I will solve the text classification
 """
 import nltk
 import random
-from nltk.corpus import movie_reviews
 import numpy as np
 import pickle
 from nltk.classify import ClassifierI
@@ -55,9 +54,9 @@ for i in range(len(user_reviews)):
     label='neg'
     if user_ratings[i]>3:
         label='pos'
-    documents.append((user_reviews[i].split(),label))
+    documents.append((user_reviews[i].lower().split(),label))
     for word in user_reviews[i].split():
-        all_words.append(word)
+        all_words.append(word.lower())
 
 
 all_words = nltk.FreqDist(all_words)
@@ -65,80 +64,115 @@ all_words = nltk.FreqDist(all_words)
 word_features = list(all_words.keys())[:3000]            
 
 featuresets = [(find_features(rev), category) for (rev, category) in documents]
-             
+
+     
 # set that we'll train our classifier with
-training_set = featuresets[:1900]
+#take 90 % for development and 10 % as validation
+# apply 5 cross validation.
 
-# set that we'll test against.
-testing_set = featuresets[1900:]
+val_sample_index = int(0.2 * float(len(featuresets)))
+NB_accuracy=[]
+MNB_accuracy=[]
 
-classifier = nltk.NaiveBayesClassifier.train(training_set)
-print("Classifier accuracy percent:",(nltk.classify.accuracy(classifier, testing_set))*100)
+BernoulliNB_accuracy=[]
+LogisticRegression_accuracy=[]
+SGD_accuracy=[]
+SVC_accuracy=[]
+LinearSVC_accuracy=[]
+NuSVC_accuracy=[]
+voted_accuracy=[]
+for i in range(5):
+    training_set=featuresets
+    testing_set = featuresets[i*val_sample_index:i*val_sample_index+val_sample_index]
+    #take all but not the indeicies in the vlaidation set
+    training_set=featuresets[:i*val_sample_index]+featuresets[i*val_sample_index+val_sample_index:]
+    
+    # set that we'll test against.
+    print("length of training_set=",len(training_set))
+    print("length of testing_set=",len(testing_set))
+    
+    classifier = nltk.NaiveBayesClassifier.train(training_set)
+    acc=nltk.classify.accuracy(classifier, testing_set)
+    NB_accuracy.append(acc)
+    print((i+1),"NaiveBayes Classifier accuracy percent:",(acc)*100)
+    
+    from nltk.classify.scikitlearn import SklearnClassifier
+    
+    from sklearn.naive_bayes import MultinomialNB,BernoulliNB
+    
+        
+    from sklearn.linear_model import LogisticRegression,SGDClassifier
+    from sklearn.svm import SVC, LinearSVC, NuSVC
+    
+    #classifier.show_most_informative_features(15)
+    
+    MNB_classifier = SklearnClassifier(MultinomialNB())
+    MNB_classifier.train(training_set)
+    acc=nltk.classify.accuracy(MNB_classifier, testing_set)
+    MNB_accuracy.append(acc)
+    print((i+1),"MNB_classifier accuracy percent:", (acc)*100)
+    
+    BernoulliNB_classifier = SklearnClassifier(BernoulliNB())
+    BernoulliNB_classifier.train(training_set)
+    acc=nltk.classify.accuracy(BernoulliNB_classifier, testing_set)
+    BernoulliNB_accuracy.append(acc)
+    print((i+1),"BernoulliNB_classifier accuracy percent:", (acc)*100)
+    
+    LogisticRegression_classifier = SklearnClassifier(LogisticRegression())
+    LogisticRegression_classifier.train(training_set)
+    acc=nltk.classify.accuracy(LogisticRegression_classifier, testing_set)
+    LogisticRegression_accuracy.append(acc)
+    print((i+1),"LogisticRegression_classifier accuracy percent:", (acc)*100)
+    
+    SGDClassifier_classifier = SklearnClassifier(SGDClassifier())
+    SGDClassifier_classifier.train(training_set)
+    acc=nltk.classify.accuracy(SGDClassifier_classifier, testing_set)
+    SGD_accuracy.append(acc)
+    print((i+1),"SGDClassifier_classifier accuracy percent:", (acc)*100)
+    
+    SVC_classifier = SklearnClassifier(SVC())
+    SVC_classifier.train(training_set)
+    acc=nltk.classify.accuracy(SVC_classifier, testing_set)
+    SVC_accuracy.append(acc)
+    print((i+1),"SVC_classifier accuracy percent:", (acc)*100)
+    
+    LinearSVC_classifier = SklearnClassifier(LinearSVC())
+    LinearSVC_classifier.train(training_set)
+    acc=nltk.classify.accuracy(LinearSVC_classifier, testing_set)
+    LinearSVC_accuracy.append(acc)
+    print((i+1),"LinearSVC_classifier accuracy percent:", (acc)*100)
+    
+    NuSVC_classifier = SklearnClassifier(NuSVC())
+    NuSVC_classifier.train(training_set)
+    acc=nltk.classify.accuracy(NuSVC_classifier, testing_set)
+    NuSVC_accuracy.append(acc)
+    print((i+1),"NuSVC_classifier accuracy percent:", (acc)*100)
+    
+    voted_classifier = VoteClassifier(classifier,
+                                      NuSVC_classifier,
+                                      LinearSVC_classifier,
+                                      SGDClassifier_classifier,
+                                      MNB_classifier,
+                                      BernoulliNB_classifier,
+                                      LogisticRegression_classifier)
+    acc=nltk.classify.accuracy(voted_classifier, testing_set)
+    voted_accuracy.append(acc)
+    print((i+1),"voted_classifier accuracy percent:", (acc)*100)
+    print ("---------------------------------------------------")
 
-from nltk.classify.scikitlearn import SklearnClassifier
-
-from sklearn.naive_bayes import MultinomialNB,BernoulliNB
-
-MNB_classifier = SklearnClassifier(MultinomialNB())
-MNB_classifier.train(training_set)
-print("MultinomialNB accuracy percent:",nltk.classify.accuracy(MNB_classifier, testing_set))
-
-BNB_classifier = SklearnClassifier(BernoulliNB())
-BNB_classifier.train(training_set)
-print("BernoulliNB accuracy percent:",nltk.classify.accuracy(BNB_classifier, testing_set))
+print("result from 5-cross validation!!")
 
 
-from sklearn.linear_model import LogisticRegression,SGDClassifier
-from sklearn.svm import SVC, LinearSVC, NuSVC
+print("Naive Bayes  accuracy percent:",np.mean(NB_accuracy)*100)
+print("MultinomialNB  accuracy percent:",np.mean(MNB_accuracy)*100)
+print("BernoulliNB  accuracy percent:",np.mean(BernoulliNB_accuracy)*100)
 
-print("Original Naive Bayes Algo accuracy percent:", (nltk.classify.accuracy(classifier, testing_set))*100)
-classifier.show_most_informative_features(15)
-
-MNB_classifier = SklearnClassifier(MultinomialNB())
-MNB_classifier.train(training_set)
-print("MNB_classifier accuracy percent:", (nltk.classify.accuracy(MNB_classifier, testing_set))*100)
-
-BernoulliNB_classifier = SklearnClassifier(BernoulliNB())
-BernoulliNB_classifier.train(training_set)
-print("BernoulliNB_classifier accuracy percent:", (nltk.classify.accuracy(BernoulliNB_classifier, testing_set))*100)
-
-LogisticRegression_classifier = SklearnClassifier(LogisticRegression())
-LogisticRegression_classifier.train(training_set)
-print("LogisticRegression_classifier accuracy percent:", (nltk.classify.accuracy(LogisticRegression_classifier, testing_set))*100)
-
-SGDClassifier_classifier = SklearnClassifier(SGDClassifier())
-SGDClassifier_classifier.train(training_set)
-print("SGDClassifier_classifier accuracy percent:", (nltk.classify.accuracy(SGDClassifier_classifier, testing_set))*100)
-
-SVC_classifier = SklearnClassifier(SVC())
-SVC_classifier.train(training_set)
-print("SVC_classifier accuracy percent:", (nltk.classify.accuracy(SVC_classifier, testing_set))*100)
-
-LinearSVC_classifier = SklearnClassifier(LinearSVC())
-LinearSVC_classifier.train(training_set)
-print("LinearSVC_classifier accuracy percent:", (nltk.classify.accuracy(LinearSVC_classifier, testing_set))*100)
-
-NuSVC_classifier = SklearnClassifier(NuSVC())
-NuSVC_classifier.train(training_set)
-print("NuSVC_classifier accuracy percent:", (nltk.classify.accuracy(NuSVC_classifier, testing_set))*100)
+print("Logistic regression  accuracy percent:",np.mean(LogisticRegression_accuracy)*100)
+print("SGD  accuracy percent:",np.mean(SGD_accuracy)*100)
+print("SVC   accuracy percent:",np.mean(SVC_accuracy)*100)
+print("LinearSVC  accuracy percent:",np.mean(LinearSVC_accuracy)*100)
+print("NuSVC  accuracy percent:",np.mean(NuSVC_accuracy)*100)
+print("NuSVC  accuracy percent:",np.mean(voted_accuracy)*100)
 
 
-
-
-voted_classifier = VoteClassifier(classifier,
-                                  NuSVC_classifier,
-                                  LinearSVC_classifier,
-                                  SGDClassifier_classifier,
-                                  MNB_classifier,
-                                  BernoulliNB_classifier,
-                                  LogisticRegression_classifier)
-
-print("voted_classifier accuracy percent:", (nltk.classify.accuracy(voted_classifier, testing_set))*100)
-
-print("Classification:", voted_classifier.classify(testing_set[0][0]), "Confidence %:",voted_classifier.confidence(testing_set[0][0])*100)
-print("Classification:", voted_classifier.classify(testing_set[1][0]), "Confidence %:",voted_classifier.confidence(testing_set[1][0])*100)
-print("Classification:", voted_classifier.classify(testing_set[2][0]), "Confidence %:",voted_classifier.confidence(testing_set[2][0])*100)
-print("Classification:", voted_classifier.classify(testing_set[3][0]), "Confidence %:",voted_classifier.confidence(testing_set[3][0])*100)
-print("Classification:", voted_classifier.classify(testing_set[4][0]), "Confidence %:",voted_classifier.confidence(testing_set[4][0])*100)
-print("Classification:", voted_classifier.classify(testing_set[5][0]), "Confidence %:",voted_classifier.confidence(testing_set[5][0])*100)
                
