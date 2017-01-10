@@ -172,7 +172,7 @@ print("SGD  accuracy percent:",np.mean(SGD_accuracy)*100)
 print("SVC   accuracy percent:",np.mean(SVC_accuracy)*100)
 print("LinearSVC  accuracy percent:",np.mean(LinearSVC_accuracy)*100)
 print("NuSVC  accuracy percent:",np.mean(NuSVC_accuracy)*100)
-print("NuSVC  accuracy percent:",np.mean(voted_accuracy)*100)
+print("voted  accuracy percent:",np.mean(voted_accuracy)*100)
 
 
                
