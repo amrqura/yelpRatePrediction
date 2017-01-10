@@ -64,7 +64,10 @@ all_words = nltk.FreqDist(all_words)
 word_features = list(all_words.keys())[:3000]            
 
 featuresets = [(find_features(rev), category) for (rev, category) in documents]
+test=np.array(featuresets)
 
+print("number of negative elements",np.count_nonzero(test[:,1]=='neg'))
+print ("number of positive elements",np.count_nonzero(test[:,1]=='pos'))
      
 # set that we'll train our classifier with
 #take 90 % for development and 10 % as validation
